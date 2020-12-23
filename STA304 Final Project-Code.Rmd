@@ -1,0 +1,139 @@
+---
+title: "Logistic Regression model and cluster analysis based on Portuguese banking institution’s marketing campaign"
+author: "Yuika Cho-1003213186"
+date: "12/20/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+##logistic regression part
+##intall packages
+library(tidyverse)
+library(randomForest)
+library(ggplot2)
+library(gbm)
+library(gmodels)
+library(DMwR)
+library(caret)
+library(rpart)
+library(rpart.plot)
+
+
+##read in
+##already did data substitution in excel
+bank <- read.csv("bank-additional-full.csv",sep = ';')
+
+##data preparation for logistic regression model
+bank2 <-bank[,-grep("nr.employed|day_of_week|month",colnames(data_original))]
+summary(bank2)
+
+bank2[data=="unknown"]<-NA
+bank3<-na.omit(bank2)
+View(bank3)
+
+##logistic regression model
+set.seed(99)
+r<-trainControl(method = "repeatedcv",number = 5,repeats = 3)
+lrm<-train(y~.,data=bank3,method="glm",trControl=r)
+lrm
+
+##cluster analysis part
+##library
+library(factoextra)
+library(matlib)
+library(readxl)
+library(plyr)
+library(psych)
+library(nFactors)
+library(dplyr)
+library(NbClust)
+library(gmodels)
+library(caret)
+##read in
+library(readxl)
+bank4<- read_excel("C:/Users/Desktop/bank-after.xlsx")
+
+
+##marital
+dmy1<-dummyVars(~marital,data=bank4)
+d1<-data.frame(predict(dmy1,newdata=bank4))
+
+##education
+dmy2<-dummyVars(~education,data=bank4)
+d2<-data.frame(predict(dmy2,newdata=bank4))
+
+##job
+dmy3<-dummyVars(~job,data=bank4)
+d3<-data.frame(predict(dmy3,newdata=bank4))
+
+
+##housing
+dmy4<-dummyVars(~housing,data=bank4)
+d4<-data.frame(predict(dmy4,newdata=bank4))
+
+##loan
+dmy5<-dummyVars(~loan,data=bank4)
+d5<-data.frame(predict(dmy5,newdata=bank4))
+
+
+
+##after screening and standardization
+bank5<-cbind(bank$age,d1,d2,d3,d4,d5)
+bank5
+
+bank6<-scale(bank5)
+bank6
+
+
+##best cluster number
+```{r}
+
+set.seed(500)
+x=NbClust(data=bank6,min.nc=3,
+        max.nc=15,index="all",method="kmeans")
+fviz_nbclust(x, kmeans, method = "wss")
+```
+##kmeans cluster analysis
+```{r}
+set.seed(99)
+Cluster3<-kmeans(bank5,3,iter.max=100,nstart=100)
+Cluster3
+t1=table(bank$y,Cluster3$cluster)
+t1
+
+```
+
+
+
+
+
+
+
+
+
+
+
